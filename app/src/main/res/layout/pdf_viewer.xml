@@ -5,6 +5,10 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <com.joanzapata.pdfview.PDFView
+        android:id="@+id/pdfview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
     <it.sephiroth.android.library.imagezoom.ImageViewTouch
         android:id="@+id/pdfpage"
