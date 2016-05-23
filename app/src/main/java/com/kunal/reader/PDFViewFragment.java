@@ -25,8 +25,6 @@ public class PDFViewFragment extends Fragment {
     private int currentPage;
     private PdfRenderer renderer;
 
-    private GestureDetectorCompat mDetector;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -58,6 +56,8 @@ public class PDFViewFragment extends Fragment {
     }
 
     private void loadPage() {
+        if (renderer.getPageCount() <= currentPage) return;
+
         PdfRenderer.Page page = renderer.openPage(currentPage);
 
         // Render for showing on the screen

@@ -1,12 +1,10 @@
 package com.kunal.reader;
+
 import android.app.NotificationManager;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.pdf.PdfRenderer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.NotificationCompat;
@@ -15,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -27,35 +26,33 @@ import com.dropbox.client2.exception.DropboxException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import it.sephiroth.android.library.imagezoom.ImageViewTouch;
+public class BookViewer extends Fragment {
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.list_view, container, false);
+    }
 
-
-public class FilesFragment extends Fragment {
     private ListAdapter listAdapter;
     private ListView listView;
 
     private NotificationCompat.Builder mBuilder;
     private NotificationManager mNotifyManager;
 
-    public List<DropboxAPI.Entry> files;
+    public List<com.dropbox.client2.DropboxAPI.Entry> files;
     public DropboxAPI<AndroidAuthSession> DropboxAPI;
-    public List<String> folders;
-    public List<List<com.dropbox.client2.DropboxAPI.Entry>> file_list;
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Empty files list
-        files = new ArrayList<>();
-        return inflater.inflate(R.layout.list_view, container, false);
-    }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Bundle bundle = this.getArguments();
+        String folder = bundle.getString("folder");
+
+        files = new ArrayList<>();
+
         // Intialize view
         listView = (ListView) getActivity().findViewById(R.id.listview);
         listView.setAdapter(listAdapter = new ListAdapter());
@@ -67,23 +64,7 @@ public class FilesFragment extends Fragment {
         // Dropbox module
         DropboxAPI = ((HomeActivity) getActivity()).DropboxAPI;
 
-        folders = ((HomeActivity) getActivity()).folders;
-        file_list = ((HomeActivity) getActivity()).files_list;
-        loadFiles(folders.get(0));
-    }
-
-    public void loadFiles(String filename) {
-        new ListClass().execute(filename);
-    }
-
-    public void goBack() {
-        // Remove from lists that we have
-        file_list.remove(file_list.size()-1);
-        folders.remove(folders.size()-1);
-
-        // Finally set the file to the latest structure
-        files = file_list.get(file_list.size()-1);
-        listAdapter.notifyDataSetChanged();
+        new ListClass().execute(folder);
     }
 
     class ListAdapter extends BaseAdapter {
@@ -130,9 +111,14 @@ public class FilesFragment extends Fragment {
     class FileClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            // Add to list of folders traversed
-            folders.add(listAdapter.getItem(position));
-            new ListClass().execute(listAdapter.getItem(position));
+            mNotifyManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+            mBuilder = new NotificationCompat.Builder(getActivity());
+
+            mBuilder.setContentTitle("Download")
+                    .setContentText("Download in progress")
+                    .setSmallIcon(R.drawable.icon);
+
+            new DownloadFile().execute(listAdapter.getItem(position));
         }
     }
 
@@ -167,9 +153,18 @@ public class FilesFragment extends Fragment {
 
         protected void onPostExecute(DropboxAPI.Entry e) {
             super.onPostExecute(e);
-            files = e.contents;
-            file_list.add(files);
-            listAdapter.notifyDataSetChanged();
+            if (e == null)
+                return;
+            for(com.dropbox.client2.DropboxAPI.Entry file: e.contents) {
+                if( !file.isDir ) {
+                    if (Objects.equals(file.mimeType, "application/pdf")) {
+                        files.add(file);
+                        listAdapter.notifyDataSetChanged();
+                    }
+                } else {
+                    new ListClass().execute(file.path);
+                }
+            }
         }
     };
 
