@@ -69,7 +69,7 @@ public class FilesFragment extends Fragment {
 
         folders = ((HomeActivity) getActivity()).folders;
         file_list = ((HomeActivity) getActivity()).files_list;
-        loadFiles(folders.get(0));
+        loadFiles(folders.get(folders.size()-1));
     }
 
     public void loadFiles(String filename) {

@@ -48,10 +48,8 @@ public class BookViewer extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        Bundle bundle = this.getArguments();
-        String folder = bundle.getString("folder");
-
         files = new ArrayList<>();
+        String folder = ((HomeActivity) getActivity()).booksFolder;
 
         // Intialize view
         listView = (ListView) getActivity().findViewById(R.id.listview);

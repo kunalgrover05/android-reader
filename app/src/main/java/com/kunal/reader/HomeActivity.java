@@ -150,9 +150,6 @@ public class HomeActivity extends FragmentActivity {
         // Call the book viewer fragment
         // Show all files after recursively searching the folder
         BookViewer bookViewer = new BookViewer();
-        Bundle b = new Bundle();
-        b.putString("folder", booksFolder);
-        bookViewer.setArguments(b);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.root_layout, bookViewer);
