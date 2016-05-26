@@ -2,9 +2,13 @@ package com.kunal.reader;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.NotificationCompat;
@@ -26,9 +30,17 @@ import com.dropbox.client2.exception.DropboxException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 public class BookViewer extends Fragment {
     @Override
@@ -36,6 +48,8 @@ public class BookViewer extends Fragment {
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.list_view, container, false);
     }
+
+    private int download_id = 0;
 
     private ListAdapter listAdapter;
     private ListView listView;
@@ -46,6 +60,8 @@ public class BookViewer extends Fragment {
     public List<com.dropbox.client2.DropboxAPI.Entry> files;
     public DropboxAPI<AndroidAuthSession> DropboxAPI;
 
+    private Queue<String> download_queue;
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         files = new ArrayList<>();
@@ -55,12 +71,10 @@ public class BookViewer extends Fragment {
         listView = (ListView) getActivity().findViewById(R.id.listview);
         listView.setAdapter(listAdapter = new ListAdapter());
 
-        // On click listener
-        listView.setOnItemClickListener(new FileClickListener());
-        listView.setOnItemLongClickListener(new FileLongClickListener());
-
         // Dropbox module
         DropboxAPI = ((HomeActivity) getActivity()).DropboxAPI;
+
+        download_queue = new LinkedBlockingDeque<String>() {};
 
         new ListClass().execute(folder);
     }
@@ -106,35 +120,6 @@ public class BookViewer extends Fragment {
         ImageView imageView;
     }
 
-    class FileClickListener implements AdapterView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mNotifyManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-            mBuilder = new NotificationCompat.Builder(getActivity());
-
-            mBuilder.setContentTitle("Download")
-                    .setContentText("Download in progress")
-                    .setSmallIcon(R.drawable.icon);
-
-            new DownloadFile().execute(listAdapter.getItem(position));
-        }
-    }
-
-    class FileLongClickListener implements AdapterView.OnItemLongClickListener {
-        @Override
-        public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-            mNotifyManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-            mBuilder = new NotificationCompat.Builder(getActivity());
-
-            mBuilder.setContentTitle("Download")
-                    .setContentText("Download in progress")
-                    .setSmallIcon(R.drawable.icon);
-
-            new DownloadFile().execute(listAdapter.getItem(position));
-            return true;
-        }
-    }
-
     // List all folders here
     private class ListClass extends AsyncTask<String, Integer, DropboxAPI.Entry> {
         protected DropboxAPI.Entry doInBackground(String... s) {
@@ -149,35 +134,61 @@ public class BookViewer extends Fragment {
             return null;
         }
 
+        private void addFiles(DropboxAPI.Entry e) {
+            if (Objects.equals(e.mimeType, "application/pdf")) {
+                files.add(e);
+                download_queue.add(e.path);
+                if (download_id == 0) {
+                    download_id += 1;
+                    new DownloadFile().execute(download_queue.remove());
+                }
+                listAdapter.notifyDataSetChanged();
+            } else if (e.isDir) {
+                // Empty directory
+                if (e.contents == null)
+                    return;
+
+                for (com.dropbox.client2.DropboxAPI.Entry file : e.contents) {
+                    if (file.isDir) {
+                        new ListClass().execute(file.path);
+                    } else {
+                        addFiles(file);
+                    }
+                }
+            }
+        }
+
         protected void onPostExecute(DropboxAPI.Entry e) {
             super.onPostExecute(e);
             if (e == null)
                 return;
-            for(com.dropbox.client2.DropboxAPI.Entry file: e.contents) {
-                if( !file.isDir ) {
-                    if (Objects.equals(file.mimeType, "application/pdf")) {
-                        files.add(file);
-                        listAdapter.notifyDataSetChanged();
-                    }
-                } else {
-                    new ListClass().execute(file.path);
-                }
-            }
+            addFiles(e);
         }
     };
 
     public class DownloadFile extends AsyncTask<String, Integer, File> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+        protected File doInBackground(String... s) {
+            mNotifyManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+            mBuilder = new NotificationCompat.Builder(getActivity());
+            mBuilder.setContentTitle("Downloading "+s[0])
+                    .setContentText("Download in progress")
+                    .setSmallIcon(R.drawable.icon);
 
             // Displays the progress bar for the first time.
             mBuilder.setProgress(100, 0, false);
-            mNotifyManager.notify(100, mBuilder.build());
-        }
+            mNotifyManager.notify(download_id, mBuilder.build());
 
-        protected File doInBackground(String... s) {
-            File file = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/" + s[0].replaceAll("/", ""));
+
+            File sdcard = Environment.getExternalStorageDirectory();
+            File f = new File(sdcard+"/myBooks");
+            if (!f.exists()) {
+                boolean created = f.mkdir();
+            }
+
+            File file = new File (f + "/" + s[0].replaceAll("/", ""));
+            if (file.exists()) {
+                return file;
+            }
             FileOutputStream outputStream = null;
             try {
                 outputStream = new FileOutputStream(file);
@@ -204,26 +215,23 @@ public class BookViewer extends Fragment {
 
         protected void onProgressUpdate(Integer... progress) {
             mBuilder.setProgress(100, progress[0], false);
-            mNotifyManager.notify(100, mBuilder.build());
+            mNotifyManager.notify(download_id, mBuilder.build());
             super.onProgressUpdate(progress);
         }
 
         @Override
         protected void onPostExecute(File result) {
             super.onPostExecute(result);
-            mBuilder.setContentText("Download complete");
+            mBuilder.setContentText("Download complete"+result.getName());
             // Removes the progress bar
             mBuilder.setProgress(0, 0, false);
-            mNotifyManager.notify(100, mBuilder.build());
+            mNotifyManager.notify(download_id, mBuilder.build());
 
-            PDFViewFragment pdfFragment = new PDFViewFragment();
-            pdfFragment.setArguments(getActivity().getIntent().getExtras());
-            // Add the fragment to the 'fragment_container' FrameLayout
-            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.root_layout, pdfFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
-            ((HomeActivity) getActivity()).current_file = result;
+            try {
+                download_id += 1;
+                new DownloadFile().execute(download_queue.remove());
+            } catch (NoSuchElementException e) {
+            }
         }
     }
 }
