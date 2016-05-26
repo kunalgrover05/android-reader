@@ -64,7 +64,9 @@ public class PDFViewFragment extends Fragment {
         });
 
         // File to load
-        File file = ((HomeActivity) getActivity()).current_file;
+        Bundle b = getActivity().getIntent().getExtras();
+        File file = (File) b.get("file");
+//        File file = ((HomeActivity) getActivity()).current_file;
 
         ParcelFileDescriptor pfd = null;
         try {

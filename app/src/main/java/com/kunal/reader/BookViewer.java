@@ -1,6 +1,7 @@
 package com.kunal.reader;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -38,7 +39,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.Stack;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
@@ -60,7 +63,8 @@ public class BookViewer extends Fragment {
     public List<com.dropbox.client2.DropboxAPI.Entry> files;
     public DropboxAPI<AndroidAuthSession> DropboxAPI;
 
-    private Queue<String> download_queue;
+    private Queue<FileClass> download_queue;
+    private Stack<String> folder_files;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -74,9 +78,13 @@ public class BookViewer extends Fragment {
         // Dropbox module
         DropboxAPI = ((HomeActivity) getActivity()).DropboxAPI;
 
-        download_queue = new LinkedBlockingDeque<String>() {};
+        download_queue = new LinkedBlockingDeque<FileClass>() {};
+        folder_files = new Stack<String>();
 
-        new ListClass().execute(folder);
+        // Make a Stack of folders to process
+        folder_files.push(folder);
+
+        new ListClass().execute();
     }
 
     class ListAdapter extends BaseAdapter {
@@ -120,28 +128,36 @@ public class BookViewer extends Fragment {
         ImageView imageView;
     }
 
+    class FileClass {
+        String path;
+        long bytes;
+    }
+
     // List all folders here
-    private class ListClass extends AsyncTask<String, Integer, DropboxAPI.Entry> {
-        protected DropboxAPI.Entry doInBackground(String... s) {
+    private class ListClass extends AsyncTask<Void, Integer, DropboxAPI.Entry> {
+        protected DropboxAPI.Entry doInBackground(Void... s) {
+            String folder = folder_files.pop();
+
             try {
                 String hash = null;
                 String rev = null;
-                DropboxAPI.Entry entry = DropboxAPI.metadata(s[0], 10000, hash, true, rev);
+                DropboxAPI.Entry entry = DropboxAPI.metadata(folder, 10000, hash, true, rev);
                 return entry;
             } catch (DropboxException e) {
                 e.printStackTrace();
+                return null;
             }
-            return null;
         }
 
         private void addFiles(DropboxAPI.Entry e) {
             if (Objects.equals(e.mimeType, "application/pdf")) {
                 files.add(e);
-                download_queue.add(e.path);
-                if (download_id == 0) {
-                    download_id += 1;
-                    new DownloadFile().execute(download_queue.remove());
-                }
+
+                FileClass c = new FileClass();
+                c.bytes = e.bytes;
+                c.path = e.path;
+                download_queue.add(c);
+
                 listAdapter.notifyDataSetChanged();
             } else if (e.isDir) {
                 // Empty directory
@@ -150,7 +166,7 @@ public class BookViewer extends Fragment {
 
                 for (com.dropbox.client2.DropboxAPI.Entry file : e.contents) {
                     if (file.isDir) {
-                        new ListClass().execute(file.path);
+                        folder_files.push(file.path);
                     } else {
                         addFiles(file);
                     }
@@ -163,14 +179,20 @@ public class BookViewer extends Fragment {
             if (e == null)
                 return;
             addFiles(e);
+            if (folder_files.size() > 0) {
+                new ListClass().execute();
+            } else {
+                // Start a download Queue
+                new DownloadFile().execute(download_queue.remove());
+            }
         }
     };
 
-    public class DownloadFile extends AsyncTask<String, Integer, File> {
-        protected File doInBackground(String... s) {
+    public class DownloadFile extends AsyncTask<FileClass, Integer, File> {
+        protected File doInBackground(FileClass... s) {
             mNotifyManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
             mBuilder = new NotificationCompat.Builder(getActivity());
-            mBuilder.setContentTitle("Downloading "+s[0])
+            mBuilder.setContentTitle("Downloading "+s[0].path)
                     .setContentText("Download in progress")
                     .setSmallIcon(R.drawable.icon);
 
@@ -178,15 +200,15 @@ public class BookViewer extends Fragment {
             mBuilder.setProgress(100, 0, false);
             mNotifyManager.notify(download_id, mBuilder.build());
 
-
             File sdcard = Environment.getExternalStorageDirectory();
             File f = new File(sdcard+"/myBooks");
-            if (!f.exists()) {
-                boolean created = f.mkdir();
+            if (!f.exists() && f.length() != 0) {
+                // TODO Add message for failure
+                f.mkdir();
             }
 
-            File file = new File (f + "/" + s[0].replaceAll("/", ""));
-            if (file.exists()) {
+            File file = new File (f + "/" + s[0].path.replaceAll("/", ""));
+            if (file.exists() && file.length()==s[0].bytes) {
                 return file;
             }
             FileOutputStream outputStream = null;
@@ -196,7 +218,7 @@ public class BookViewer extends Fragment {
                 e.printStackTrace();
             }
             try {
-                DropboxAPI.DropboxFileInfo info = DropboxAPI.getFile(s[0], null, outputStream, new ProgressListener(){
+                DropboxAPI.DropboxFileInfo info = DropboxAPI.getFile(s[0].path, null, outputStream, new ProgressListener(){
                     @Override
                     public long progressInterval() {
                         return 500;
@@ -222,6 +244,18 @@ public class BookViewer extends Fragment {
         @Override
         protected void onPostExecute(File result) {
             super.onPostExecute(result);
+            Intent resultIntent = new Intent(getActivity(), PDFViewActivity.class);
+            resultIntent.putExtra("file", result);
+            // Because clicking the notification opens a new ("special") activity, there's
+            // no need to create an artificial back stack.
+            PendingIntent resultPendingIntent =
+                    PendingIntent.getActivity(
+                            getActivity(),
+                            0,
+                            resultIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+            mBuilder.setContentIntent(resultPendingIntent);
             mBuilder.setContentText("Download complete"+result.getName());
             // Removes the progress bar
             mBuilder.setProgress(0, 0, false);
