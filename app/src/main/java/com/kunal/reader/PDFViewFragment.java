@@ -36,6 +36,8 @@ public class PDFViewFragment extends Fragment {
     private PdfRenderer renderer;
     private boolean color_mode;
     private ImageViewTouch pdfView;
+    private SQLHelper db;
+    private String fileName;
 
     private static float[] NEGATIVE = {
         -1, 0, 0, 0, 255,
@@ -63,9 +65,14 @@ public class PDFViewFragment extends Fragment {
             }
         });
 
+
         // File to load
         Bundle b = getActivity().getIntent().getExtras();
         File file = (File) b.get("file");
+        fileName = file.getName();
+        db = new SQLHelper(getActivity());
+        currentPage = db.getBook(fileName);
+
 //        File file = ((HomeActivity) getActivity()).current_file;
 
         ParcelFileDescriptor pfd = null;
@@ -81,7 +88,6 @@ public class PDFViewFragment extends Fragment {
             e.printStackTrace();
         }
 
-        currentPage = 0;
         loadPage();
     }
 
@@ -105,6 +111,7 @@ public class PDFViewFragment extends Fragment {
                 @Override
                 public void onSingleTapConfirmed() {
                     currentPage += 1;
+                    db.addBook(fileName, currentPage);
                     loadPage();
                 }
             }

@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -45,7 +46,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-public class BookViewer extends Fragment {
+public class BookViewerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -66,6 +67,8 @@ public class BookViewer extends Fragment {
     private Queue<FileClass> download_queue;
     private Stack<String> folder_files;
 
+    private SQLHelper db;
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         files = new ArrayList<>();
@@ -83,6 +86,9 @@ public class BookViewer extends Fragment {
 
         // Make a Stack of folders to process
         folder_files.push(folder);
+
+        // Create DB connection
+        db = new SQLHelper(getActivity());
 
         new ListClass().execute();
     }
@@ -221,7 +227,7 @@ public class BookViewer extends Fragment {
                 DropboxAPI.DropboxFileInfo info = DropboxAPI.getFile(s[0].path, null, outputStream, new ProgressListener(){
                     @Override
                     public long progressInterval() {
-                        return 500;
+                        return 100;
                     }
 
                     @Override
@@ -264,6 +270,7 @@ public class BookViewer extends Fragment {
             try {
                 download_id += 1;
                 new DownloadFile().execute(download_queue.remove());
+                db.addBook(result.getName(), 0);
             } catch (NoSuchElementException e) {
             }
         }

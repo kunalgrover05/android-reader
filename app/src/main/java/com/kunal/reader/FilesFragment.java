@@ -167,6 +167,8 @@ public class FilesFragment extends Fragment {
 
         protected void onPostExecute(DropboxAPI.Entry e) {
             super.onPostExecute(e);
+            if (e == null)
+                return;
             files = e.contents;
             file_list.add(files);
             listAdapter.notifyDataSetChanged();
