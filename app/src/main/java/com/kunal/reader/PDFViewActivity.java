@@ -21,6 +21,7 @@ public class PDFViewActivity extends FragmentActivity {
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.add(R.id.root_layout, pdfViewFragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 }

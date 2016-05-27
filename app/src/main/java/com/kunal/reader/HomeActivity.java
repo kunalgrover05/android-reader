@@ -36,15 +36,16 @@ public class HomeActivity extends FragmentActivity {
     public List<List<com.dropbox.client2.DropboxAPI.Entry>> files_list;
     public File current_file;
     public String booksFolder;
+    public List<String> books_list;
 
     public FilesFragment filesFragment;
     public SelectorFragment selectorFragment;
     public PDFViewFragment pdfViewFragment;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+    public MyBooksFragment myBooksFragment;
+
     private GoogleApiClient client;
+
+    private SQLHelper db;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,16 +55,27 @@ public class HomeActivity extends FragmentActivity {
 
         files_list = new ArrayList<>();
 
-        filesFragment = new FilesFragment();
+        db = new SQLHelper(this);
+        // Check if DB has any books. If no, launch the original fragments
 
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.add(R.id.root_layout, filesFragment);
-        transaction.commit();
+        books_list = db.getBooks();
+        if (books_list.size() != 0) {
+            myBooksFragment = new MyBooksFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.add(R.id.root_layout, myBooksFragment);
+            transaction.commit();
+        } else {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-        selectorFragment = new SelectorFragment();
-        transaction = getSupportFragmentManager().beginTransaction();
-        transaction.add(R.id.root_layout, selectorFragment);
-        transaction.commit();
+            filesFragment = new FilesFragment();
+            transaction.add(R.id.root_layout, filesFragment);
+            transaction.commit();
+
+            selectorFragment = new SelectorFragment();
+            transaction = getSupportFragmentManager().beginTransaction();
+            transaction.add(R.id.root_layout, selectorFragment);
+            transaction.commit();
+        }
 
         login();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -117,7 +129,6 @@ public class HomeActivity extends FragmentActivity {
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.root_layout, bookViewerFragment);
-        transaction.addToBackStack(null);
         transaction.commit();
     }
 

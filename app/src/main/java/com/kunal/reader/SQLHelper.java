@@ -8,6 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class SQLHelper extends SQLiteOpenHelper {
 
@@ -81,5 +84,21 @@ public class SQLHelper extends SQLiteOpenHelper {
         }
         db.close();
         return page;
+    }
+
+    public List<String> getBooks() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<String> files = new ArrayList<>();
+
+        Cursor cursor = db.query(TABLE_BOOKS, new String[] { KEY_NAME, KEY_PAGE }, null,
+                null, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                files.add(cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME)));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        db.close();
+        return files;
     }
 }
