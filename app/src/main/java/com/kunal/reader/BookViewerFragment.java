@@ -266,11 +266,11 @@ public class BookViewerFragment extends Fragment {
             // Removes the progress bar
             mBuilder.setProgress(0, 0, false);
             mNotifyManager.notify(download_id, mBuilder.build());
+            db.addBook(result.getName(), 0);
 
             try {
                 download_id += 1;
                 new DownloadFile().execute(download_queue.remove());
-                db.addBook(result.getName(), 0);
             } catch (NoSuchElementException e) {
             }
         }

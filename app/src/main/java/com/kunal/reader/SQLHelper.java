@@ -53,7 +53,7 @@ public class SQLHelper extends SQLiteOpenHelper {
 
         Cursor cursor = db.query(TABLE_BOOKS, new String[] { KEY_NAME, KEY_PAGE }, KEY_NAME + "=?",
                 new String[] { file }, null, null, null, null);
-        if (cursor != null) {
+        if (cursor != null && cursor.moveToFirst()) {
             // updating row
             db.update(TABLE_BOOKS, values, KEY_NAME + " = ?", new String[]{file});
             cursor.close();

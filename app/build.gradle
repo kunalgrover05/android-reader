@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.kunal.reader"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'it.sephiroth.android.library.imagezoom:imagezoom:+'
     compile 'com.google.android.gms:play-services-appindexing:8.1.0'
+    compile 'com.joanzapata.pdfview:android-pdfview:1.0.4@aar'
 }

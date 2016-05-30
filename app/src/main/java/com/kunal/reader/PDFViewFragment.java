@@ -7,7 +7,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.DrawFilter;
 import android.graphics.LightingColorFilter;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfRenderer;
@@ -24,6 +26,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+
+import com.joanzapata.pdfview.PDFView;
+import com.joanzapata.pdfview.listener.OnDrawListener;
+import com.joanzapata.pdfview.listener.OnPageChangeListener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -73,22 +79,33 @@ public class PDFViewFragment extends Fragment {
         db = new SQLHelper(getActivity());
         currentPage = db.getBook(fileName);
 
-//        File file = ((HomeActivity) getActivity()).current_file;
+        PDFView p = (PDFView)getActivity().findViewById(R.id.pdfpage_pdfview);
+        p.fromFile(file)
+                .showMinimap(true)
+                .defaultPage(db.getBook(fileName))
+                .enableSwipe(true)
+                .onPageChange(new OnPageChangeListener() {
+                    @Override
+                    public void onPageChanged(int page, int pageCount) {
+                        db.addBook(fileName, page);
+                    }
+                })
+                .load();
 
-        ParcelFileDescriptor pfd = null;
-        try {
-            pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            renderer = new PdfRenderer(pfd);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        loadPage();
+//        ParcelFileDescriptor pfd = null;
+//        try {
+//            pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//
+//        try {
+//            renderer = new PdfRenderer(pfd);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        loadPage();
     }
 
     private void modify() {
@@ -99,42 +116,42 @@ public class PDFViewFragment extends Fragment {
         }
     }
 
-    private void loadPage() {
-        if (renderer.getPageCount() <= currentPage) return;
-
-        PdfRenderer.Page page = renderer.openPage(currentPage);
-
-        // Render for showing on the screen
-        pdfView = (ImageViewTouch) getActivity().findViewById(R.id.pdfpage);
-        pdfView.setSingleTapListener(
-            new ImageViewTouch.OnImageViewTouchSingleTapListener() {
-                @Override
-                public void onSingleTapConfirmed() {
-                    currentPage += 1;
-                    db.addBook(fileName, currentPage);
-                    loadPage();
-                }
-            }
-        );
-
-        DisplayMetrics displayMetrics = getActivity().getResources().getDisplayMetrics();
-        int screenWidth = displayMetrics.widthPixels;
-        int screenHeight = displayMetrics.heightPixels;
-
-        Bitmap mBitmap = Bitmap.createBitmap(screenWidth * 2, screenHeight * 2,
-                Bitmap.Config.ARGB_8888);
-        page.render(mBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-
-        // Background for the image
-        Bitmap image = Bitmap.createBitmap(mBitmap.getWidth(), mBitmap.getHeight(),mBitmap.getConfig());
-        image.eraseColor(Color.WHITE);
-        Canvas canvas = new Canvas(image);
-        canvas.drawBitmap(mBitmap, 0f, 0f, null);
-
-        pdfView.setImageDrawable(new BitmapDrawable(getResources(), image));
-        if (color_mode) {
-            pdfView.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-        }
-        page.close();
-    }
+//    private void loadPage() {
+//        if (renderer.getPageCount() <= currentPage) return;
+//
+//        PdfRenderer.Page page = renderer.openPage(currentPage);
+//
+//        // Render for showing on the screen
+//        pdfView = (ImageViewTouch) getActivity().findViewById(R.id.pdfpage);
+//        pdfView.setSingleTapListener(
+//            new ImageViewTouch.OnImageViewTouchSingleTapListener() {
+//                @Override
+//                public void onSingleTapConfirmed() {
+//                    currentPage += 1;
+//                    db.addBook(fileName, currentPage);
+//                    loadPage();
+//                }
+//            }
+//        );
+//
+//        DisplayMetrics displayMetrics = getActivity().getResources().getDisplayMetrics();
+//        int screenWidth = displayMetrics.widthPixels;
+//        int screenHeight = displayMetrics.heightPixels;
+//
+//        Bitmap mBitmap = Bitmap.createBitmap(screenWidth * 2, screenHeight * 2,
+//                Bitmap.Config.ARGB_8888);
+//        page.render(mBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+//
+//        // Background for the image
+//        Bitmap image = Bitmap.createBitmap(mBitmap.getWidth(), mBitmap.getHeight(),mBitmap.getConfig());
+//        image.eraseColor(Color.WHITE);
+//        Canvas canvas = new Canvas(image);
+//        canvas.drawBitmap(mBitmap, 0f, 0f, null);
+//
+//        pdfView.setImageDrawable(new BitmapDrawable(getResources(), image));
+//        if (color_mode) {
+//            pdfView.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
+//        }
+//        page.close();
+//    }
 }

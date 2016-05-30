@@ -72,6 +72,10 @@ public class FilesFragment extends Fragment {
         loadFiles(folders.get(folders.size()-1));
     }
 
+    public void loadFiles() {
+        new ListClass().execute(folders.get(folders.size()-1));
+    }
+
     public void loadFiles(String filename) {
         new ListClass().execute(filename);
     }

@@ -59,6 +59,14 @@ public class HomeActivity extends FragmentActivity {
         // Check if DB has any books. If no, launch the original fragments
 
         books_list = db.getBooks();
+        login();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+    }
+
+    private void authComplete() {
         if (books_list.size() != 0) {
             myBooksFragment = new MyBooksFragment();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -76,12 +84,8 @@ public class HomeActivity extends FragmentActivity {
             transaction.add(R.id.root_layout, selectorFragment);
             transaction.commit();
         }
-
-        login();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
+
 
     @Override
     protected void onResume() {
@@ -94,6 +98,7 @@ public class HomeActivity extends FragmentActivity {
                 // Mandatory call to complete the auth
                 session.finishAuthentication();
                 storeAuth(session);
+                authComplete();
             } catch (IllegalStateException e) {
                 Log.i("AUTH", "Error authenticating", e);
             }
@@ -111,6 +116,7 @@ public class HomeActivity extends FragmentActivity {
         if (token != null) {
             // Reuse auth
             DropboxAPI.getSession().setOAuth2AccessToken(token);
+            authComplete();
         } else {
             DropboxAPI.getSession().startOAuth2Authentication(HomeActivity.this);
         }

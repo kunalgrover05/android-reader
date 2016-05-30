@@ -7,13 +7,22 @@
     android:layout_height="match_parent"
     android:weightSum="1">
 
-    <it.sephiroth.android.library.imagezoom.ImageViewTouch
-        android:id="@+id/pdfpage"
+    <com.joanzapata.pdfview.PDFView
+        android:id="@+id/pdfpage_pdfview"
         android:layout_width="match_parent"
-        android:layout_height="457dp"
+        android:layout_height="match_parent"
         android:scaleType="fitCenter"
         android:src="@drawable/icon"
         android:layout_weight="1.21" />
+
+    <!--<it.sephiroth.android.library.imagezoom.ImageViewTouch-->
+        <!--android:id="@+id/pdfpage"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="457dp"-->
+        <!--android:scaleType="fitCenter"-->
+        <!--android:src="@drawable/icon"-->
+        <!--android:layout_weight="1.21">-->
+    <!--</it.sephiroth.android.library.imagezoom.ImageViewTouch>-->
 
     <Button
         style="?android:attr/buttonStyleSmall"
