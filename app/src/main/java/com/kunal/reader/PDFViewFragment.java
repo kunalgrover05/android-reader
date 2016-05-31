@@ -1,6 +1,7 @@
 package com.kunal.reader;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Canvas;
@@ -13,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfRenderer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.app.Fragment;
@@ -34,6 +36,8 @@ import com.joanzapata.pdfview.listener.OnPageChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import com.artifex.mupdfdemo.MuPDFActivity;
 
 import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 
@@ -79,18 +83,24 @@ public class PDFViewFragment extends Fragment {
         db = new SQLHelper(getActivity());
         currentPage = db.getBook(fileName);
 
-        PDFView p = (PDFView)getActivity().findViewById(R.id.pdfpage_pdfview);
-        p.fromFile(file)
-                .showMinimap(true)
-                .defaultPage(db.getBook(fileName))
-                .enableSwipe(true)
-                .onPageChange(new OnPageChangeListener() {
-                    @Override
-                    public void onPageChanged(int page, int pageCount) {
-                        db.addBook(fileName, page);
-                    }
-                })
-                .load();
+//        PDFView p = (PDFView)getActivity().findViewById(R.id.pdfpage_pdfview);
+//        p.fromFile(file)
+//                .showMinimap(true)
+//                .defaultPage(db.getBook(fileName))
+//                .enableSwipe(true)
+//                .onPageChange(new OnPageChangeListener() {
+//                    @Override
+//                    public void onPageChanged(int page, int pageCount) {
+//                        db.addBook(fileName, page);
+//                    }
+//                })
+//                .load();
+
+        Intent fileIntent = new Intent(getActivity(), MuPDFActivity.class);
+        fileIntent.setAction(Intent.ACTION_VIEW);
+        fileIntent.setData(Uri.parse(file.getPath()));
+        fileIntent.putExtra("Mode", false);
+        startActivity(fileIntent);
 
 //        ParcelFileDescriptor pfd = null;
 //        try {

@@ -1,8 +1,10 @@
 package com.kunal.reader;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.pdf.PdfRenderer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,6 +22,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.artifex.mupdfdemo.MuPDFActivity;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.android.AndroidAuthSession;
@@ -105,17 +108,14 @@ public class MyBooksFragment extends Fragment {
     private class FileClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            FragmentTransaction transaction = getActivity().getSupportFragmentManager().beginTransaction();
-            PDFViewFragment pdfViewFragment = new PDFViewFragment();
-
             // File to load
-            getActivity().getIntent().putExtra("file",
-                    new File(Environment.getExternalStorageDirectory() + "/myBooks/" + books_list.get(position)));
+            File file = new File(Environment.getExternalStorageDirectory() + "/myBooks/" + books_list.get(position));
 
-            // Go back
-            transaction.replace(R.id.root_layout, pdfViewFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
+            // Launch Viewer activity
+            Intent fileIntent = new Intent(getActivity(), MuPDFActivity.class);
+            fileIntent.setAction(Intent.ACTION_VIEW);
+            fileIntent.setData(Uri.parse(file.getPath()));
+            startActivity(fileIntent);
         }
     }
 }
