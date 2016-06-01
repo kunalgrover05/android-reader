@@ -1,41 +1,18 @@
 package com.kunal.reader;
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.ColorMatrixColorFilter;
-import android.graphics.DrawFilter;
-import android.graphics.LightingColorFilter;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.GestureDetectorCompat;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v7.widget.ButtonBarLayout;
-import android.util.DisplayMetrics;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import com.joanzapata.pdfview.PDFView;
-import com.joanzapata.pdfview.listener.OnDrawListener;
-import com.joanzapata.pdfview.listener.OnPageChangeListener;
+import com.artifex.mupdfdemo.SQLHelper;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import com.artifex.mupdfdemo.MuPDFActivity;
 
@@ -82,6 +59,7 @@ public class PDFViewFragment extends Fragment {
         fileName = file.getName();
         db = new SQLHelper(getActivity());
         currentPage = db.getBook(fileName);
+        db.addBook(fileName, currentPage);
 
 //        PDFView p = (PDFView)getActivity().findViewById(R.id.pdfpage_pdfview);
 //        p.fromFile(file)
