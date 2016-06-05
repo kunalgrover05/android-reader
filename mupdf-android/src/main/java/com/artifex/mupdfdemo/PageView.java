@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -463,7 +464,7 @@ public abstract class PageView extends ViewGroup {
 
                 mEntire.invalidate();
                 setBackgroundColor(Color.TRANSPARENT);
-
+                applyFilter(mEntireBm, mEntire);
             }
         };
 
@@ -640,7 +641,7 @@ public abstract class PageView extends ViewGroup {
         }
     }
 
-    public void updateHq(boolean update) {
+    public void     updateHq(boolean update) {
         Rect viewArea = new Rect(getLeft(), getTop(), getRight(), getBottom());
         if (viewArea.width() == mSize.x || viewArea.height() == mSize.y) {
             // If the viewArea's size matches the unzoomed size, there is no need for an hq patch
@@ -716,6 +717,7 @@ public abstract class PageView extends ViewGroup {
                         mPatch.setImageBitmap(mPatchBm);
                         mPatch.invalidate();
                     }
+                    applyFilter(mPatchBm, mPatch);
 
                     //requestLayout();
                     // Calling requestLayout here doesn't lead to a later call to layout. No idea
@@ -750,6 +752,7 @@ public abstract class PageView extends ViewGroup {
                     drawBitmaps(entireCanvas, null, null);
                     mEntire.setImageBitmap(mEntireBm);
                     mEntire.invalidate();
+                    applyFilter(mEntireBm, mEntire);
                 }
             }
         };
@@ -757,6 +760,27 @@ public abstract class PageView extends ViewGroup {
         mDrawEntire.execute();
 
         updateHq(true);
+    }
+
+    public void applyFilter(Bitmap bm, ImageView im) {
+        if ( ((MuPDFActivity)getContext()).mode ) {
+            // Copy the bitmap and apply a filter
+
+            Bitmap newBmp = bm.copy(bm.getConfig(), true);
+
+            Canvas mEntireCanvas = new Canvas(newBmp);
+            Paint paint = new Paint();
+            float[] NEGATIVE = {
+                    -1, 0, 0, 0, 255,
+                    0, -1, 0, 0, 255,
+                    0, 0, -1, 0, 255,
+                    0, 0, 0, 1, 0
+            };
+            paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
+            mEntireCanvas.drawBitmap(newBmp, 0, 0, paint);
+            im.setImageBitmap(newBmp);
+            im.invalidate();
+        }
     }
 
     public void removeHq() {
@@ -790,6 +814,7 @@ public abstract class PageView extends ViewGroup {
             drawBitmaps(entireCanvas, null, null);
             mEntire.setImageBitmap(mEntireBm);
             mEntire.invalidate();
+            applyFilter(mEntireBm, mEntire);
         }
     }
 
@@ -848,6 +873,7 @@ public abstract class PageView extends ViewGroup {
             float x = e.getX();
             float y = e.getY();
 
+            // Go to next page or previous page
             //Comprobamos si ha picado dentro o fuera del espacio del pdf
             if (x < getLeft() || x > getRight()) {
                 eventCallback.error(DigitalizedEventCallback.ERROR_OUTSIDE_HORIZONTAL);

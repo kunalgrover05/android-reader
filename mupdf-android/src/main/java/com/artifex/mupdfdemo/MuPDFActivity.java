@@ -87,6 +87,8 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 	private AlertDialog mAlertDialog;
 	private FilePicker mFilePicker;
 
+	public boolean mode = false;
+
 	public void createAlertWaiter() {
 		mAlertsActive = true;
 		// All mupdf library calls are performed on asynchronous tasks to avoid stalling
@@ -565,11 +567,11 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 			}
 		});
 
-		mLinkButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				setLinkHighlight(!mLinkHighlight);
-			}
-		});
+//		mLinkButton.setOnClickListener(new View.OnClickListener() {
+//			public void onClick(View v) {
+//				setLinkHighlight(!mLinkHighlight);
+//			}
+//		});
 
 		if (core.hasOutline()) {
 			mOutlineButton.setOnClickListener(new View.OnClickListener() {
@@ -885,18 +887,9 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 	}
 
 	public void OnChangeColorButtonClick(View v) {
-		float[] NEGATIVE = {
-				-1, 0, 0, 0, 255,
-				0, -1, 0, 0, 255,
-				0, 0, -1, 0, 255,
-				0, 0, 0, 1, 0
-		};
-
-		// Try to add a filter to bitmap
-//		Canvas canvas = new Canvas();
-//		Paint paint = new Paint();
-//		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-//		canvas.drawBitmap(bm, 0, 0, paint);
+		MuPDFView pageView = (MuPDFView) mDocView.getDisplayedView();
+		mode = !mode;
+		pageView.update();
 	}
 
 	public void OnMoreButtonClick(View v) {

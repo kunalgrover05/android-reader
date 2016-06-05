@@ -213,9 +213,9 @@ public class MuPDFCore
 				0, 0, 0, 1, 0
 		};
 		Canvas canvas = new Canvas();
-		Paint paint = new Paint();
-		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-		canvas.drawBitmap(bm, 0, 0, paint);
+//		Paint paint = new Paint();
+//		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
+//		canvas.drawBitmap(bm, 0, 0, paint);
 	}
 
 	public synchronized void updatePage(Bitmap bm, int page,
@@ -230,10 +230,10 @@ public class MuPDFCore
 				0, 0, 0, 1, 0
 		};
 		updatePageInternal(bm, page, pageW, pageH, patchX, patchY, patchW, patchH, cookie.cookiePtr);
-		Canvas canvas = new Canvas();
-		Paint paint = new Paint();
-		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-		canvas.drawBitmap(bm, 0, 0, paint);
+//		Canvas canvas = new Canvas();
+//		Paint paint = new Paint();
+//		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
+//		canvas.drawBitmap(bm, 0, 0, paint);
 	}
 
 	public synchronized PassClickResult passClickEvent(int page, float x, float y) {
