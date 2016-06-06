@@ -203,19 +203,7 @@ public class MuPDFCore
 			int patchW, int patchH,
 			Cookie cookie) {
 		gotoPage(page);
-
-		// Try to add a filter to bitmap
 		drawPage(bm, pageW, pageH, patchX, patchY, patchW, patchH, cookie.cookiePtr);
-		float[] NEGATIVE = {
-				-1, 0, 0, 0, 255,
-				0, -1, 0, 0, 255,
-				0, 0, -1, 0, 255,
-				0, 0, 0, 1, 0
-		};
-		Canvas canvas = new Canvas();
-//		Paint paint = new Paint();
-//		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-//		canvas.drawBitmap(bm, 0, 0, paint);
 	}
 
 	public synchronized void updatePage(Bitmap bm, int page,
@@ -223,17 +211,7 @@ public class MuPDFCore
 			int patchX, int patchY,
 			int patchW, int patchH,
 			Cookie cookie) {
-		float[] NEGATIVE = {
-				-1, 0, 0, 0, 255,
-				0, -1, 0, 0, 255,
-				0, 0, -1, 0, 255,
-				0, 0, 0, 1, 0
-		};
 		updatePageInternal(bm, page, pageW, pageH, patchX, patchY, patchW, patchH, cookie.cookiePtr);
-//		Canvas canvas = new Canvas();
-//		Paint paint = new Paint();
-//		paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
-//		canvas.drawBitmap(bm, 0, 0, paint);
 	}
 
 	public synchronized PassClickResult passClickEvent(int page, float x, float y) {

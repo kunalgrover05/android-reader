@@ -17,7 +17,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.artifex.mupdfdemo.SQLHelper;
+//import com.artifex.mupdfdemo.SQLHelper;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.android.AndroidAuthSession;
@@ -55,7 +55,7 @@ public class BookViewerFragment extends Fragment {
     private Queue<FileClass> download_queue;
     private Stack<String> folder_files;
 
-    private SQLHelper db;
+//    private SQLHelper db;
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -76,7 +76,7 @@ public class BookViewerFragment extends Fragment {
         folder_files.push(folder);
 
         // Create DB connection
-        db = new SQLHelper(getActivity());
+//        db = new SQLHelper(getActivity());
 
         new ListClass().execute();
     }
@@ -238,7 +238,7 @@ public class BookViewerFragment extends Fragment {
         @Override
         protected void onPostExecute(File result) {
             super.onPostExecute(result);
-            Intent resultIntent = new Intent(getActivity(), PDFViewActivity.class);
+            Intent resultIntent = new Intent(getActivity(), PDFViewActivity_.class);
             resultIntent.putExtra("file", result);
             // Because clicking the notification opens a new ("special") activity, there's
             // no need to create an artificial back stack.
@@ -254,7 +254,7 @@ public class BookViewerFragment extends Fragment {
             // Removes the progress bar
             mBuilder.setProgress(0, 0, false);
             mNotifyManager.notify(download_id, mBuilder.build());
-            db.addBook(result.getName(), 0);
+//            db.addBook(result.getName(), 0);
 
             try {
                 download_id += 1;

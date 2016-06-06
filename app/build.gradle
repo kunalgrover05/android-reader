@@ -26,5 +26,5 @@ dependencies {
     compile 'it.sephiroth.android.library.imagezoom:imagezoom:+'
     compile 'com.google.android.gms:play-services-appindexing:8.1.0'
     compile 'com.joanzapata.pdfview:android-pdfview:1.0.4@aar'
-    compile project(':mupdf-android')
+    compile project(path: ':MuPdf')
 }

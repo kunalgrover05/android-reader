@@ -13,7 +13,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.artifex.mupdfdemo.MuPDFActivity;
+import com.artifex.mupdfdemo.PDFViewActivity;
 import com.artifex.mupdfdemo.SQLHelper;
 
 import java.io.File;
@@ -92,7 +92,7 @@ public class MyBooksFragment extends Fragment {
             File file = new File(Environment.getExternalStorageDirectory() + "/myBooks/" + books_list.get(position));
 
             // Launch Viewer activity
-            Intent fileIntent = new Intent(getActivity(), MuPDFActivity.class);
+            Intent fileIntent = new Intent(getActivity(), PDFViewActivity.class);
             fileIntent.setAction(Intent.ACTION_VIEW);
             fileIntent.setData(Uri.parse(file.getPath()));
             startActivity(fileIntent);

@@ -21,7 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".PDFViewActivity">
+        <activity android:name=".PDFViewActivity_">
         </activity>
         <activity
             android:name="com.dropbox.client2.android.AuthActivity"
